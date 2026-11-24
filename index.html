@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mes finances – PFM</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#2a78d6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mes finances">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f3f0; --surface: #fcfcfb; --surface-2: #f0efec; --border: #e2e1dc;
+  --text: #0b0b0b; --text-2: #52514e; --text-3: #7a7974;
+  --s1: #2a78d6; --s2: #eb6834; --accent: #2a78d6;
+  --good: #0ca30c; --good-text: #006300; --critical: #d03b3b; --warning: #fab219;
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c6: #008300; --c7: #6250d6; --c8: #e34948; --c-other: #a3a29c;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #111110; --surface: #1a1a19; --surface-2: #262624; --border: #33332f;
+    --text: #f0efec; --text-2: #c3c2b7; --text-3: #8f8e86;
+    --s1: #3987e5; --s2: #d95926; --accent: #3987e5;
+    --good: #0ca30c; --good-text: #3ec33e; --critical: #e66767;
+    --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c6: #0ca30c; --c7: #9085e9; --c8: #e66767; --c-other: #6b6a64;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+button, select, input, textarea { font: inherit; color: inherit; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 60px; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
+h2 { font-size: 14px; margin: 0 0 12px; font-weight: 600; }
+.sub { color: var(--text-2); font-size: 12px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 7px 12px; cursor: pointer; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn.icon { padding: 7px 10px; }
+.btn.danger { color: var(--critical); }
+select, input[type=text], input[type=number], textarea { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 7px 10px; }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 10px; padding: 3px; }
+.seg button { border: 0; background: transparent; padding: 5px 10px; border-radius: 8px; cursor: pointer; color: var(--text-2); }
+.seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); font-weight: 600; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+.kpi .label { color: var(--text-2); font-size: 12px; }
+.kpi .value { font-size: 24px; font-weight: 650; letter-spacing: -.02em; margin: 2px 0; font-variant-numeric: tabular-nums; }
+.kpi .note { font-size: 12px; color: var(--text-3); }
+.pos { color: var(--good-text); } .neg { color: var(--critical); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.banner { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-size: 12.5px; color: var(--text-2); margin-bottom: 12px; }
+.banner b { color: var(--text); }
+/* barres horizontales */
+.hbar { display: grid; grid-template-columns: 150px 1fr 88px; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 8px; cursor: pointer; }
+.hbar:hover, .hbar.sel { background: var(--surface-2); }
+.hbar .name { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hbar .track { height: 14px; position: relative; }
+.hbar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--s1); border-radius: 0 4px 4px 0; min-width: 2px; }
+.hbar .val { text-align: right; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.hbar .val small { color: var(--text-3); display: block; font-size: 11px; line-height: 1.1; }
+/* graphique mensuel */
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); margin: -4px 0 8px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .axis { fill: var(--text-3); font-size: 11px; }
+.chart .grid { stroke: var(--border); stroke-width: 1; }
+.chart .hit { fill: transparent; cursor: pointer; }
+.chart .hit:hover, .chart .hit.cur { fill: var(--surface-2); }
+.tip { position: absolute; pointer-events: none; background: var(--text); color: var(--surface); border-radius: 8px; padding: 8px 10px; font-size: 12px; white-space: nowrap; transform: translate(-50%, -100%); display: none; z-index: 5; font-variant-numeric: tabular-nums; }
+.tip i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+/* listes */
+.list { display: flex; flex-direction: column; }
+.li { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); align-items: center; }
+.li:last-child { border-bottom: 0; }
+.li .m { font-weight: 550; } .li .c { font-size: 11.5px; color: var(--text-3); }
+.li .amt { font-variant-numeric: tabular-nums; text-align: right; }
+.todo .li { grid-template-columns: 1fr auto 170px; }
+/* tableau */
+.tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+.tools input[type=text] { flex: 1; min-width: 180px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 7px 6px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+th { font-size: 11.5px; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+td.amt, th.amt { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td .raw { font-size: 11px; color: var(--text-3); }
+td select { padding: 4px 6px; font-size: 12.5px; max-width: 190px; }
+.pill { font-size: 10.5px; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); margin-left: 6px; }
+.pill.pending { background: color-mix(in srgb, var(--warning) 25%, transparent); color: var(--text); }
+.dim { color: var(--text-3); }
+.more { text-align: center; margin-top: 10px; }
+/* import / vide */
+.drop { border: 2px dashed var(--border); border-radius: var(--radius); padding: 36px 20px; text-align: center; color: var(--text-2); cursor: pointer; }
+.drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.empty { max-width: 620px; margin: 40px auto; text-align: center; }
+.empty ol { text-align: left; color: var(--text-2); }
+dialog { border: 0; border-radius: 16px; padding: 0; max-width: 560px; width: calc(100% - 32px); background: var(--surface); color: var(--text); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+dialog::backdrop { background: rgba(0,0,0,.4); }
+.dlg { padding: 20px; }
+.dlg h2 { font-size: 17px; }
+.dlg textarea { width: 100%; height: 110px; font-family: ui-monospace, monospace; font-size: 11.5px; }
+.dlg .field { margin-bottom: 14px; }
+.dlg .field label { display: block; font-weight: 600; margin-bottom: 4px; }
+.dlg .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.rules { max-height: 180px; overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
+.rules div { display: flex; justify-content: space-between; gap: 8px; padding: 5px 10px; border-bottom: 1px solid var(--border); font-size: 12.5px; align-items: center; }
+.cardhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.cardhead h2 { margin: 0; }
+.seg.sm button { padding: 3px 9px; font-size: 12px; }
+.donut { display: grid; grid-template-columns: 220px 1fr; gap: 16px; align-items: center; }
+.donut svg { width: 220px; height: 220px; display: block; }
+.donut path { cursor: pointer; stroke: var(--surface); stroke-width: 2; }
+.donut path:hover { opacity: .85; }
+.donut .ctr1 { font-size: 11px; fill: var(--text-2); } .donut .ctr2 { font-size: 17px; font-weight: 650; fill: var(--text); }
+.dleg { display: flex; flex-direction: column; gap: 2px; }
+.dleg .r { display: grid; grid-template-columns: 12px 1fr auto 44px; gap: 8px; align-items: center; padding: 5px 6px; border-radius: 8px; cursor: pointer; font-size: 12.5px; }
+.dleg .r:hover { background: var(--surface-2); }
+.dleg .r.other { cursor: default; } .dleg .r.other:hover { background: none; }
+.dleg i { width: 12px; height: 12px; border-radius: 3px; display: block; }
+.dleg .a { font-variant-numeric: tabular-nums; text-align: right; } .dleg .p { color: var(--text-3); text-align: right; font-variant-numeric: tabular-nums; }
+.dleg .sub2 { grid-column: 2 / -1; font-size: 11px; color: var(--text-3); margin-top: -3px; }
+dialog.wide { max-width: 760px; }
+.det-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0 16px; }
+.det-kpis div { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; }
+.det-kpis b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
+.det-kpis span { font-size: 11.5px; color: var(--text-2); }
+.det h3 { font-size: 13px; margin: 16px 0 6px; }
+.det .ops { max-height: 300px; overflow: auto; }
+.det .close { float: right; }
+.proj { margin-bottom: 12px; }
+.proj .cols { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 16px; align-items: start; }
+.proj .big { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.proj .lbl { font-size: 12px; color: var(--text-2); }
+.proj .up { font-size: 12.5px; }
+.proj .up div { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px dashed var(--border); }
+.proj .up div:last-child { border-bottom: 0; }
+.proj .up span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.planned td { color: var(--text-3); font-style: italic; }
+.pill.plan { background: color-mix(in srgb, var(--s1) 18%, transparent); color: var(--text); }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--text); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-size: 13px; display: none; z-index: 50; max-width: 90vw; }
+@media (max-width: 860px) {
+  .kpis { grid-template-columns: 1fr 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
+  .hbar { grid-template-columns: 110px 1fr 80px; }
+  .todo .li { grid-template-columns: 1fr auto; } .todo .li select { grid-column: 1 / -1; }
+  .hide-sm { display: none; }
+  .donut { grid-template-columns: 1fr; justify-items: center; } .dleg { width: 100%; }
+  .det-kpis { grid-template-columns: 1fr 1fr; }
+  .proj .cols { grid-template-columns: 1fr; }
+  .kpi .value { font-size: 19px; }
+  td select { max-width: 120px; }
+  th, td { padding: 6px 3px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Mes finances</h1>
+      <div class="sub" id="coverage">Aucune donnée importée</div>
+    </div>
+    <div class="row">
+      <div class="seg" id="bankSeg"></div>
+      <button class="btn icon" id="prev" title="Période précédente" aria-label="Période précédente">‹</button>
+      <select id="periodSel" aria-label="Période"></select>
+      <button class="btn icon" id="next" title="Période suivante" aria-label="Période suivante">›</button>
+      <button class="btn" id="syncBtn" title="Synchroniser avec Google Drive" hidden>☁ Synchroniser</button>
+      <button class="btn" id="addBtn">＋ Opération</button>
+      <button class="btn primary" id="importBtn">Importer</button>
+      <button class="btn icon" id="settingsBtn" title="Réglages" aria-label="Réglages">⚙</button>
+    </div>
+  </header>
+
+  <div id="emptyView" class="empty" hidden>
+    <h2 style="font-size:18px">Importe tes premières opérations</h2>
+    <ol>
+      <li>Connecte-toi sur Attijarinet et ouvre la page <b>Opérations</b> de ton compte Simple.</li>
+      <li>Clique sur <b>⬇ Export PFM</b> (en bas à droite), choisis la période, télécharge le fichier.</li>
+      <li>Dépose le fichier ci-dessous. Tout reste dans ton navigateur.</li>
+    </ol>
+    <div class="drop" id="emptyDrop">Dépose ton fichier JSON ici ou clique pour le choisir</div>
+  </div>
+
+  <main id="mainView" hidden>
+    <div class="banner" id="banner" hidden></div>
+    <section class="kpis">
+      <div class="card kpi"><div class="label">Revenus</div><div class="value" id="kIncome"></div><div class="note" id="kIncomeN"></div></div>
+      <div class="card kpi"><div class="label">Dépenses</div><div class="value" id="kExpense"></div><div class="note" id="kExpenseN"></div></div>
+      <div class="card kpi"><div class="label">Épargne nette</div><div class="value" id="kSavings"></div><div class="note" id="kSavingsN"></div></div>
+      <div class="card kpi"><div class="label">Variation du solde</div><div class="value" id="kNet"></div><div class="note" id="kNetN"></div></div>
+    </section>
+
+    <section class="card proj" id="proj" hidden></section>
+
+    <section class="grid2">
+      <div class="card">
+        <div class="cardhead"><h2>Dépenses par catégorie <span class="sub" id="catSub"></span></h2>
+          <div class="seg sm" id="catViewSeg"><button data-v="bars">Barres</button><button data-v="donut">Camembert</button></div></div>
+        <div id="catBars"></div>
+      </div>
+      <div class="card">
+        <h2>Revenus et dépenses, 12 derniers mois</h2>
+        <div class="legend"><span><i style="background:var(--s1)"></i>Revenus</span><span><i style="background:var(--s2)"></i>Dépenses</span></div>
+        <div class="chart" id="monthChart"></div>
+      </div>
+    </section>
+
+    <section class="grid2">
+      <div class="card">
+        <h2>Où part l'argent : top marchands</h2>
+        <div class="list" id="topList"></div>
+      </div>
+      <div class="card todo">
+        <h2>À catégoriser <span class="sub">(une fois par marchand, l'appli retient la règle)</span></h2>
+        <div class="list" id="todoList"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="tools">
+        <input type="text" id="q" placeholder="Rechercher un libellé, un marchand…" aria-label="Recherche">
+        <select id="catFilter" aria-label="Filtrer par catégorie"><option value="">Toutes les catégories</option></select>
+        <label class="sub"><input type="checkbox" id="allPeriods"> toutes les périodes</label>
+        <label class="sub" title="Quand tu changes une catégorie, l'appliquer à toutes les opérations du même marchand"><input type="checkbox" id="learn" checked> appliquer au marchand</label>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Opération</th><th class="hide-sm">Compte</th><th>Catégorie</th><th class="amt">Montant</th></tr></thead>
+        <tbody id="txBody"></tbody>
+      </table>
+      <div class="more" id="more"></div>
+    </section>
+  </main>
+</div>
+
+<dialog id="importDlg">
+  <form class="dlg" method="dialog">
+    <h2>Importer des opérations</h2>
+    <div class="field">
+      <div class="drop" id="dlgDrop">Dépose un ou plusieurs fichiers JSON ici, ou clique pour les choisir</div>
+      <input type="file" id="fileInput" accept=".json,application/json" multiple hidden>
+    </div>
+    <div class="field">
+      <label for="paste">…ou colle la réponse JSON (operation/data)</label>
+      <textarea id="paste" placeholder='{"aaData":[ … ]}'></textarea>
+    </div>
+    <div class="field">
+      <label for="pasteBank">Compte concerné (si le fichier ne le précise pas)</label>
+      <select id="pasteBank"></select>
+    </div>
+    <div class="actions">
+      <button class="btn" value="cancel">Fermer</button>
+      <button class="btn primary" id="pasteGo" type="button">Importer le texte collé</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="addDlg">
+  <form class="dlg" id="addForm">
+    <h2>Ajouter une opération</h2>
+    <div class="field"><label for="aBank">Compte</label><select id="aBank"></select></div>
+    <div class="field"><label>Sens</label>
+      <div class="seg" id="aSens"><button type="button" data-s="-1" class="on">Sortie (dépense)</button><button type="button" data-s="1">Entrée</button></div></div>
+    <div class="field row"><div style="flex:1"><label for="aAmount">Montant (MAD)</label><input type="number" id="aAmount" min="0" step="0.01" required style="width:100%"></div>
+      <div style="flex:1"><label for="aDate">Date</label><input type="date" id="aDate" required style="width:100%"></div></div>
+    <div class="field"><label for="aLabel">Libellé</label><input type="text" id="aLabel" required style="width:100%" placeholder="ex. Loyer"></div>
+    <div class="field"><label for="aCat">Catégorie</label><select id="aCat" style="width:100%"></select>
+      <div class="sub" style="margin-top:4px">Astuce : une <b>entrée</b> classée dans une catégorie de dépense (ex. participation au loyer → Logement) vient en déduction de cette dépense.</div></div>
+    <div class="field"><label class="row" style="font-weight:400"><input type="checkbox" id="aRec"> Répéter chaque mois, au même jour</label></div>
+    <div class="actions"><button class="btn" type="button" data-close-add>Annuler</button><button class="btn primary" type="submit">Ajouter</button></div>
+  </form>
+</dialog>
+
+<dialog id="passDlg">
+  <form class="dlg" id="passForm">
+    <h2 id="passTitle">Phrase secrète</h2>
+    <p class="sub" id="passIntro"></p>
+    <div class="field"><label for="pass1">Phrase secrète</label><input type="password" id="pass1" autocomplete="current-password" style="width:100%" required></div>
+    <div class="field" id="pass2Field"><label for="pass2">Confirme la phrase</label><input type="password" id="pass2" autocomplete="new-password" style="width:100%"></div>
+    <div class="field"><label class="row" style="font-weight:400"><input type="checkbox" id="passRemember" checked> Mémoriser sur cet appareil (clé non exportable, stockée dans le navigateur)</label></div>
+    <div class="sub neg" id="passErr"></div>
+    <div class="actions"><button class="btn" type="button" id="passCancel">Annuler</button><button class="btn primary" type="submit">Valider</button></div>
+  </form>
+</dialog>
+
+<dialog id="catDlg" class="wide"><div class="dlg det" id="catDetail"></div></dialog>
+
+<dialog id="settingsDlg">
+  <form class="dlg" method="dialog">
+    <h2>Réglages</h2>
+    <div class="field">
+      <label for="clientId">Synchronisation Google Drive (chiffrée)</label>
+      <input type="text" id="clientId" style="width:100%" placeholder="Client ID OAuth : …apps.googleusercontent.com">
+      <div class="row" style="margin-top:8px">
+        <button class="btn primary" type="button" id="syncConnect">Se connecter et synchroniser</button>
+        <button class="btn" type="button" id="syncForget">Oublier la phrase sur cet appareil</button>
+      </div>
+      <div class="sub" id="syncStatus" style="margin-top:6px"></div>
+    </div>
+    <div class="field">
+      <label for="owners">Mes noms (virements entre mes comptes)</label>
+      <input type="text" id="owners" style="width:100%" placeholder="PRÉNOM NOM (tel qu’il apparaît sur tes virements)">
+      <div class="sub">Les virements reçus/émis à ces noms sont classés « Transfert interne » et exclus des revenus et dépenses. Sépare par des virgules.</div>
+    </div>
+    <div class="field">
+      <label for="cycle">Début du mois budgétaire</label>
+      <div class="row"><span>le</span><input type="number" id="cycle" min="1" max="28" style="width:70px"><span class="sub">1 = mois calendaire ; ex. 25 si ton salaire tombe le 25</span></div>
+    </div>
+    <div class="field">
+      <label for="trackStart">Début du suivi</label>
+      <div class="row"><input type="date" id="trackStart"><button class="btn" type="button" id="trackAll">Tout l'historique</button></div>
+      <div class="sub" id="trackHint">Les opérations antérieures restent stockées mais sont ignorées partout (indicateurs, graphiques, tableau).</div>
+    </div>
+    <div class="field">
+      <label for="basis">Date retenue pour une opération</label>
+      <select id="basis">
+        <option value="tx">Date réelle de l'achat (lue dans le libellé)</option>
+        <option value="booking">Date de comptabilisation</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Opérations récurrentes</label>
+      <div class="rules" id="recList"></div>
+    </div>
+    <div class="field">
+      <label>Règles apprises</label>
+      <div class="rules" id="rulesList"></div>
+    </div>
+    <div class="field">
+      <label>Sauvegarde</label>
+      <div class="row">
+        <button class="btn" type="button" id="backupBtn">Télécharger une sauvegarde</button>
+        <button class="btn" type="button" id="restoreBtn">Restaurer…</button>
+        <button class="btn danger" type="button" id="resetBtn">Tout effacer</button>
+      </div>
+      <div class="sub" style="margin-top:6px">Les données ne vivent que dans ce navigateur. Garde une sauvegarde de temps en temps.</div>
+      <div id="resetConfirm" class="row" style="margin-top:8px" hidden>
+        <span class="neg">Effacer toutes les opérations et règles (y compris dans le cloud si la synchro est active) ?</span>
+        <button class="btn danger" type="button" id="resetYes">Oui, effacer</button>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" value="ok">Fermer</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* PFM – logique métier (sans DOM). Testable sous Node. */
+const PFM = (() => {
+  "use strict";
+
+  const BANKS = {
+    simple: "Simple (AWB)",
+    daralamane: "Dar Al Amane",
+    autre: "Autre compte",
+  };
+
+  // type : income = revenu, expense = dépense, transfer = virement entre mes comptes (exclu)
+  const CATEGORIES = [
+    { name: "Salaire", type: "income" },
+    { name: "Cashback & remboursements", type: "income" },
+    { name: "Autres revenus", type: "income" },
+    { name: "Transfert interne", type: "transfer" },
+    { name: "Daret (épargne)", type: "transfer" },
+    { name: "Courses", type: "expense" },
+    { name: "Repas au travail", type: "expense" },
+    { name: "Restaurants & cafés", type: "expense" },
+    { name: "Livraison repas", type: "expense" },
+    { name: "Abonnements & digital", type: "expense" },
+    { name: "Télécom", type: "expense" },
+    { name: "Transport & carburant", type: "expense" },
+    { name: "Shopping & vêtements", type: "expense" },
+    { name: "Sport", type: "expense" },
+    { name: "Voyages & hôtels", type: "expense" },
+    { name: "Santé", type: "expense" },
+    { name: "Logement", type: "expense" },
+    { name: "Retraits espèces", type: "expense" },
+    { name: "Virements émis", type: "expense" },
+    { name: "Frais bancaires", type: "expense" },
+    { name: "Administratif", type: "expense" },
+    { name: "Loisirs", type: "expense" },
+    { name: "Cadeaux & famille", type: "expense" },
+    { name: "Divers", type: "expense" },
+    { name: "Non catégorisé", type: "expense" },
+  ];
+  const CAT_TYPE = Object.fromEntries(CATEGORIES.map((c) => [c.name, c.type]));
+
+  // Règles par défaut : testées dans l'ordre sur le libellé brut (en majuscules).
+  const DEFAULT_RULES = [
+    [/CASHBACK|REMBOURSEMENT|\bREMB\b|ANNULATION/, "Cashback & remboursements"],
+    [/SALAIRE|\bPAIE\b|VIREMENT DE SALAIRE/, "Salaire"],
+    [/AWBGAB|RETRAIT|\bGAB\b|\bDAB\b/, "Retraits espèces"],
+    [/^VIR(EMENT)?\.? ?EMIS/, "Virements émis"],
+    [/AWB YAM/, "Repas au travail"],
+    [/GLOVO|JUMIA FOOD|KOOL FOOD/, "Livraison repas"],
+    [/MARJANE|CARREFOUR|SUPECO|\bBIM\b|ACIMA|LABEL ?VIE|ASWAK|ATACADAO|KAZYON/, "Courses"],
+    [/MCDO|MC ?DONALD|SHAWARMA|CUCINA|PIZZ|BURGER|\bKFC\b|CAFE|COFFEE|STARBUCKS|FRESH BOL|SMOOTHIE|ADHAM CHEF|CTR FOOD|RESTAU|SUSHI|TACOS|\bPAUL\b/, "Restaurants & cafés"],
+    [/NETFLIX|SPOTIFY|APPLE\.COM|ANTHROPIC|CLAUDE|GOOGLE|CLEENG|YOUTUBE|DISNEY|SHAHID|\bOSN\b|OPENAI|CHATGPT|AMAZON PRIME|MICROSOFT/, "Abonnements & digital"],
+    [/\bIAM\b|INWI|ORANGE|MAROC TELECOM/, "Télécom"],
+    [/CIRCLE K|AFRIQUIA|SHELL|TOTAL ?ENERGIES|WINXO|PETROM|OLA ENERGY|AUTOROUTE|TAXI|YASSIR|CAREEM|UBER|INDRIVE|ONCF|PARKING|STATION/, "Transport & carburant"],
+    [/PLANET SPORT|DECATHLON|GO SPORT|CITY CLUB|FITNESS|\bGYM\b/, "Sport"],
+    [/LEFTIES|KOTON|ZARA|H&M|LC WAIKIKI|DEFACTO|BERSHKA|PULL ?& ?BEAR|MANGO|MASSIMO|PRIMARK/, "Shopping & vêtements"],
+    [/BOOKING|RESA NUITEE|AIRBNB|ROYAL AIR|RYANAIR|AIR ARABIA|HOTEL|ATTIJARI TRAVEL|EXPEDIA/, "Voyages & hôtels"],
+    [/PHCIE|PHARMA|CLINIQUE|\bLABO|DOCTEUR|MEDECIN/, "Santé"],
+    [/WRAQI|IMPOTS|\bTGR\b|\bDGI\b|ANCFCC|TIMBRE/, "Administratif"],
+    [/FRAIS|COMMISSION|COTISATION|AGIOS|TENUE DE COMPTE/, "Frais bancaires"],
+  ];
+
+  const DEFAULT_SETTINGS = {
+    ownerNames: [],              // virements reçus/émis à ces noms = transfert interne (à renseigner dans ⚙)
+    cycleStartDay: 1,            // 1 = mois calendaire ; 25 = de salaire à salaire, etc.
+    dateBasis: "tx",             // "tx" = date réelle d'achat (libellé) ; "booking" = date de comptabilisation
+    trackingStart: "2026-11-01", // suivi à partir de la période budgétaire qui contient cette date ("" = tout)
+  };
+
+  // ---------- utilitaires ----------
+  const pad = (n) => String(n).padStart(2, "0");
+  const norm = (s) => String(s || "").toUpperCase().replace(/\s+/g, " ").trim();
+
+  function hash(str) {
+    // FNV-1a 32 bits, deux passes pour réduire les collisions
+    let h1 = 0x811c9dc5, h2 = 0x01000193 ^ str.length;
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ c, 16777619);
+      h2 = Math.imul(h2 ^ c, 2246822519);
+    }
+    return (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
+  }
+
+  function toNumber(v) {
+    if (v === null || v === undefined || v === "") return 0;
+    if (typeof v === "number") return v;
+    return Number(String(v).replace(/\s/g, "").replace(",", ".")) || 0;
+  }
+
+  /** Année à 4 chiffres pour une date jj/mm sans année, déduite de la date de comptabilisation. */
+  function inferYear(day, month, bookingIso) {
+    const by = Number(bookingIso.slice(0, 4));
+    const bm = Number(bookingIso.slice(5, 7));
+    return month > bm + 1 ? by - 1 : by; // achat en décembre comptabilisé en janvier
+  }
+
+  /** Analyse un libellé Attijarinet → date réelle, marchand lisible, statut en cours. */
+  function parseLabel(rawLabel, bookingIso) {
+    let label = String(rawLabel || "").trim();
+    const pending = /\(\*\)\s*$/.test(label);
+    label = label.replace(/\(\*\)\s*$/, "").trim();
+    let txDate = bookingIso;
+    let merchant = label;
+    let m;
+
+    if ((m = label.match(/^PAIEMENT CB\s+(\d{2})[\/ ](\d{2})[\/ ](\d{2})\s+(.*)$/i))) {
+      txDate = `20${m[3]}-${m[2]}-${m[1]}`;
+      merchant = m[4];
+    } else if ((m = label.match(/^AWBGAB\s+(.+?)\s+(\d{2})\/(\d{2})\s+\d{2}H\d{2}$/i))) {
+      const y = inferYear(Number(m[2]), Number(m[3]), bookingIso);
+      txDate = `${y}-${m[3]}-${m[2]}`;
+      merchant = `Retrait GAB ${m[1].trim()}`;
+    } else if ((m = label.match(/^(?:VIREMENT|VIR\.?(?: INST)?)\s+RECU DE\s+(.+)$/i))) {
+      merchant = `Virement de ${m[1].trim()}`;
+    } else if ((m = label.match(/^VIR(?:EMENT)?\.? ?EMIS(?: WEB)?\s+VERS\s+(.+)$/i))) {
+      merchant = `Virement vers ${m[1].trim()}`;
+    } else if ((m = label.match(/^PAIEMENT\s+(RESA NUITEE)/i))) {
+      merchant = "Réservation nuitée";
+    } else if ((m = label.match(/^TOD\.\s*(.+)$/i))) {
+      merchant = m[1];
+    }
+
+    // retire les références techniques finales (ex. « Spotify P4842E78E2 »)
+    merchant = merchant.replace(/\s+[A-Z]?[0-9A-F]{8,}$/i, "").replace(/\*+/g, " ").replace(/\s+/g, " ").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(txDate) || isNaN(Date.parse(txDate))) txDate = bookingIso;
+    return { txDate, merchant, merchantKey: norm(merchant), pending };
+  }
+
+  /** Accepte un export de l'extension, la réponse brute {aaData}, ou un tableau d'opérations. */
+  function readImport(json, fallbackBank) {
+    let obj = typeof json === "string" ? JSON.parse(json) : json;
+    let bank = fallbackBank;
+    let ops;
+    if (Array.isArray(obj)) ops = obj;
+    else if (obj && obj.format === "pfm-export") { ops = obj.operations; bank = obj.bank || bank; }
+    else if (obj && Array.isArray(obj.aaData)) ops = obj.aaData;
+    else if (obj && obj.format === "pfm-backup") return { backup: obj };
+    else throw new Error("Format non reconnu : il faut l'export de l'extension ou la réponse operation/data.");
+    if (!BANKS[bank]) throw new Error(`Banque inconnue : ${bank}`);
+    return { bank, transactions: normalize(ops, bank) };
+  }
+
+  function normalize(rawOps, bank) {
+    const seen = new Map();
+    return rawOps
+      .filter((o) => o && o.dateOperation)
+      .map((o) => {
+        const date = String(o.dateOperation).slice(0, 10);
+        const label = [o.libelleOperation, o.libelleOperation2, o.libelleOperation3].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+        const amount = Math.round((toNumber(o.montantCredit) - toNumber(o.montantDebit)) * 100) / 100;
+        const base = `${bank}|${date}|${norm(label)}|${amount}`;
+        const n = (seen.get(base) || 0) + 1; // deux opérations identiques le même jour restent distinctes
+        seen.set(base, n);
+        const p = parseLabel(label, date);
+        return {
+          id: hash(`${base}|${n}`),
+          bank,
+          date,
+          valueDate: o.dateValeur ? String(o.dateValeur).slice(0, 10) : date,
+          txDate: p.txDate,
+          label,
+          merchant: p.merchant,
+          merchantKey: p.merchantKey,
+          amount,
+          pending: p.pending,
+        };
+      });
+  }
+
+  /** Fusionne un import dans l'état : dédoublonne, remplace les opérations « en cours ». */
+  function merge(state, bank, incoming) {
+    if (!incoming.length) return { added: 0, duplicates: 0, replacedPending: 0 };
+    const minDate = incoming.reduce((m, t) => (t.date < m ? t.date : m), incoming[0].date);
+    const before = state.transactions.length;
+    // les opérations en cours de cette banque, couvertes par l'import, sont remplacées
+    state.transactions = state.transactions.filter((t) => !(t.bank === bank && t.pending && t.date >= minDate));
+    const replacedPending = before - state.transactions.length;
+    const ids = new Set(state.transactions.map((t) => t.id));
+    let added = 0, duplicates = 0;
+    for (const t of incoming) {
+      if (ids.has(t.id)) { duplicates++; continue; }
+      ids.add(t.id);
+      state.transactions.push(t);
+      added++;
+    }
+    state.transactions.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    return { added, duplicates, replacedPending };
+  }
+
+  /** Catégorie d'une opération : manuel > règle apprise > nom du titulaire > règles par défaut > repli. */
+  function categorize(t, state) {
+    if (state.overrides[t.id]) return { category: state.overrides[t.id], source: "manuel" };
+    if (t.fixedCategory) return { category: t.fixedCategory, source: t.recurringId ? "récurrent" : "saisie" };
+    if (state.rules[t.merchantKey]) return { category: state.rules[t.merchantKey], source: "règle" };
+    const L = norm(t.label);
+    const owners = (state.settings.ownerNames || []).map(norm).filter(Boolean);
+    if (/^VIR|VIREMENT/.test(L) && owners.some((o) => L.includes(o))) return { category: "Transfert interne", source: "auto" };
+    for (const [re, cat] of DEFAULT_RULES) if (re.test(L)) return { category: cat, source: "auto" };
+    return { category: t.amount > 0 ? "Autres revenus" : "Non catégorisé", source: "auto" };
+  }
+
+  function periodKey(iso, startDay) {
+    let y = Number(iso.slice(0, 4)), m = Number(iso.slice(5, 7));
+    const d = Number(iso.slice(8, 10));
+    if (startDay > 1 && d < startDay) { m -= 1; if (m === 0) { m = 12; y -= 1; } }
+    return `${y}-${pad(m)}`;
+  }
+
+  function periodLabel(key, startDay, long) {
+    const [y, m] = key.split("-").map(Number);
+    const fmt = new Intl.DateTimeFormat("fr-FR", { month: long ? "long" : "short", year: "numeric" });
+    const base = fmt.format(new Date(y, m - 1, 1));
+    if (startDay <= 1 || !long) return base;
+    const end = new Date(y, m, startDay - 1);
+    return `${startDay}/${pad(m)} → ${end.getDate()}/${pad(end.getMonth() + 1)}/${end.getFullYear()}`;
+  }
+
+  /** Génère les occurrences des opérations récurrentes jusqu'à aujourd'hui. */
+  function materializeRecurring(state, todayIso, untilIso) {
+    const today = todayIso || new Date().toISOString().slice(0, 10);
+    const until = untilIso || today; // au-delà d'aujourd'hui : occurrences « prévues »
+    const out = [];
+    for (const r of state.recurring || []) {
+      let [y, m] = r.start.split("-").map(Number);
+      for (let guard = 0; guard < 240; guard++) {
+        const key = `${y}-${pad(m)}`;
+        if (r.end && key > r.end) break;
+        const last = new Date(y, m, 0).getDate();
+        const date = `${key}-${pad(Math.min(r.day, last))}`;
+        if (date > until) break;
+        out.push({
+          planned: date > today,
+          id: "r" + hash(`${r.id}|${key}`), bank: r.bank, date, valueDate: date, txDate: date,
+          label: r.label, merchant: r.label, merchantKey: norm(r.label), amount: r.amount,
+          pending: false, manual: true, recurringId: r.id, fixedCategory: r.category,
+        });
+        m++; if (m === 13) { m = 1; y++; }
+      }
+    }
+    return out;
+  }
+
+  function allTransactions(state) {
+    return [...state.transactions, ...materializeRecurring(state)];
+  }
+
+  /** Occurrences récurrentes à venir, d'après-demain… jusqu'à untilIso inclus. */
+  function plannedTransactions(state, untilIso, todayIso) {
+    return materializeRecurring(state, todayIso, untilIso).filter((t) => t.planned);
+  }
+
+  /** Bornes (ISO) d'une période budgétaire. */
+  function periodBounds(key, startDay) {
+    const [y, m] = key.split("-").map(Number);
+    const sd = Math.max(1, Number(startDay) || 1);
+    const start = new Date(Date.UTC(y, m - 1, sd));
+    const end = new Date(Date.UTC(y, m, sd - 1)); // veille du début de la période suivante
+    return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+  }
+
+  /** Date (ISO) à partir de laquelle les opérations sont prises en compte. */
+  function trackingCutoff(settings) {
+    if (!settings.trackingStart) return "";
+    const sd = Number(settings.cycleStartDay) || 1;
+    return periodBounds(periodKey(settings.trackingStart, sd), sd).start;
+  }
+
+  /** Enrichit chaque opération (catégorie, type, période) selon les réglages courants. */
+  function enrich(state, list) {
+    const sd = Number(state.settings.cycleStartDay) || 1;
+    const cutoff = trackingCutoff(state.settings);
+    return (list || allTransactions(state)).map((t) => {
+      const c = categorize(t, state);
+      const d = state.settings.dateBasis === "booking" ? t.date : t.txDate;
+      return { ...t, category: c.category, catSource: c.source, type: CAT_TYPE[c.category] || "expense", period: periodKey(d, sd), refDate: d };
+    }).filter((t) => !cutoff || t.refDate >= cutoff);
+  }
+
+  /** Indicateurs d'une liste d'opérations enrichies. */
+  function summarize(list) {
+    let income = 0, expense = 0, transferIn = 0, transferOut = 0, net = 0, daretOut = 0, daretIn = 0;
+    const byCat = {}, byMerchant = {};
+    for (const t of list) {
+      net += t.amount;
+      if (t.type === "income") income += t.amount;
+      else if (t.type === "expense") {
+        expense += -t.amount; // un remboursement classé en dépense réduit la dépense
+        byCat[t.category] = (byCat[t.category] || 0) + -t.amount;
+        const k = t.merchant || t.label;
+        const bm = (byMerchant[k] = byMerchant[k] || { merchant: k, total: 0, count: 0, category: t.category });
+        bm.total += -t.amount; bm.count++;
+      } else if (t.category === "Daret (épargne)") { if (t.amount < 0) daretOut += -t.amount; else daretIn += t.amount; }
+      else if (t.amount > 0) transferIn += t.amount; else transferOut += -t.amount;
+    }
+    const r2 = (x) => Math.round(x * 100) / 100;
+    const savings = income - expense;
+    return {
+      income: r2(income), expense: r2(expense), savings: r2(savings),
+      savingsRate: income > 0 ? savings / income : null,
+      transferIn: r2(transferIn), transferOut: r2(transferOut), net: r2(net), daretOut: r2(daretOut), daretIn: r2(daretIn),
+      byCategory: Object.entries(byCat).map(([category, total]) => ({ category, total: r2(total) }))
+        .filter((x) => Math.abs(x.total) >= 0.005).sort((a, b) => b.total - a.total),
+      topMerchants: Object.values(byMerchant).map((x) => ({ ...x, total: r2(x.total) })).sort((a, b) => b.total - a.total),
+      count: list.length,
+    };
+  }
+
+  // ---------- synchronisation : horodatage, fusion, chiffrement ----------
+
+  /** Instantané comparable de l'état (pour détecter ce qui a changé entre deux enregistrements). */
+  function snapshot(state) {
+    const snap = {};
+    for (const t of state.transactions) snap["tx:" + t.id] = "1";
+    for (const [k, v] of Object.entries(state.rules)) snap["rule:" + k] = v;
+    for (const [k, v] of Object.entries(state.overrides)) snap["ov:" + k] = v;
+    for (const r of state.recurring || []) snap["rec:" + r.id] = JSON.stringify(r);
+    snap.settings = JSON.stringify(state.settings);
+    return snap;
+  }
+
+  /** Horodate ce qui a été ajouté/modifié, et marque comme supprimé ce qui a disparu. */
+  function stamp(state, prevSnap, now) {
+    const cur = snapshot(state);
+    state.ts = state.ts || {}; state.deleted = state.deleted || {};
+    for (const [k, v] of Object.entries(cur)) if (prevSnap[k] !== v) { state.ts[k] = now; delete state.deleted[k]; }
+    for (const k of Object.keys(prevSnap)) if (!(k in cur)) state.deleted[k] = now;
+    return cur;
+  }
+
+  /** Fusionne deux états : opération par opération, la modification la plus récente l'emporte. */
+  function mergeStates(a, b) {
+    const ta = a.ts || {}, tb = b.ts || {};
+    const del = { ...(a.deleted || {}) };
+    for (const [k, v] of Object.entries(b.deleted || {})) del[k] = Math.max(del[k] || 0, v);
+    const ts = { ...ta };
+    for (const [k, v] of Object.entries(tb)) ts[k] = Math.max(ts[k] || 0, v);
+    const alive = (k) => !(del[k] && del[k] >= (ts[k] || 0));
+    const pick = (k, va, vb) => (va === undefined ? vb : vb === undefined ? va : (tb[k] || 0) > (ta[k] || 0) ? vb : va);
+
+    const txs = new Map();
+    for (const t of b.transactions || []) txs.set(t.id, t);
+    for (const t of a.transactions || []) txs.set(t.id, t);
+    const transactions = [...txs.values()].filter((t) => alive("tx:" + t.id))
+      .sort((x, y) => (x.date < y.date ? 1 : x.date > y.date ? -1 : 0));
+
+    const mapMerge = (ma, mb, prefix) => {
+      const out = {};
+      for (const k of new Set([...Object.keys(ma || {}), ...Object.keys(mb || {})])) {
+        const v = pick(prefix + k, (ma || {})[k], (mb || {})[k]);
+        if (v !== undefined && alive(prefix + k)) out[k] = v;
+      }
+      return out;
+    };
+    const ra = Object.fromEntries((a.recurring || []).map((r) => [r.id, r]));
+    const rb = Object.fromEntries((b.recurring || []).map((r) => [r.id, r]));
+    const recurring = Object.values(mapMerge(ra, rb, "rec:"));
+    const settings = (tb.settings || 0) > (ta.settings || 0) ? { ...DEFAULT_SETTINGS, ...b.settings } : { ...DEFAULT_SETTINGS, ...a.settings };
+
+    // purge des marques de suppression de plus de 400 jours
+    const limit = Date.now() - 400 * 86400000;
+    for (const k of Object.keys(del)) if (del[k] < limit) delete del[k];
+
+    return { version: 1, transactions, recurring, rules: mapMerge(a.rules, b.rules, "rule:"), overrides: mapMerge(a.overrides, b.overrides, "ov:"), settings, ts, deleted: del };
+  }
+
+  const b64 = (u8) => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000)); return btoa(s); };
+  const unb64 = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
+  const subtle = () => globalThis.crypto.subtle;
+
+  async function deriveKey(passphrase, saltB64) {
+    const base = await subtle().importKey("raw", new TextEncoder().encode(passphrase.normalize("NFC")), "PBKDF2", false, ["deriveKey"]);
+    return subtle().deriveKey({ name: "PBKDF2", salt: unb64(saltB64), iterations: 310000, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  }
+  function newSalt() { return b64(globalThis.crypto.getRandomValues(new Uint8Array(16))); }
+
+  async function encryptVault(key, saltB64, obj) {
+    const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await subtle().encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(obj))));
+    return { format: "pfm-vault", v: 1, kdf: "PBKDF2-SHA256-310000", salt: saltB64, iv: b64(iv), ct: b64(ct), updatedAt: new Date().toISOString() };
+  }
+  async function decryptVault(key, vault) {
+    if (!vault || vault.format !== "pfm-vault") throw new Error("Fichier de synchronisation invalide.");
+    let pt;
+    try { pt = await subtle().decrypt({ name: "AES-GCM", iv: unb64(vault.iv) }, key, unb64(vault.ct)); }
+    catch { throw new Error("Phrase secrète incorrecte."); }
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+
+  function emptyState() {
+    return { version: 1, transactions: [], recurring: [], rules: {}, overrides: {}, settings: { ...DEFAULT_SETTINGS }, ts: {}, deleted: {} };
+  }
+
+  return { BANKS, CATEGORIES, CAT_TYPE, DEFAULT_SETTINGS, hash, materializeRecurring, allTransactions, plannedTransactions, periodBounds, trackingCutoff, snapshot, stamp, mergeStates, deriveKey, newSalt, encryptVault, decryptVault, parseLabel, readImport, normalize, merge, categorize, enrich, summarize, periodKey, periodLabel, emptyState, norm };
+})();
+if (typeof module !== "undefined") module.exports = PFM;
+
+</script>
+<script>
+(() => {
+"use strict";
+const STORE_KEY = "pfm.v1";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const nf = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const nf0 = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+const mad = (x) => `${nf.format(x)} MAD`;
+const mad0 = (x) => `${nf0.format(x)} MAD`;
+const signed = (x) => (x > 0 ? "+" : x < 0 ? "−" : "") + mad(Math.abs(x));
+const fmtDate = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(2, 4)}`;
+
+// ---------- état ----------
+let state = load();
+const ui = { bank: "all", period: null, cat: "", q: "", all: false, limit: 60 };
+const catView = () => state.settings.catView || "bars";
+
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (s && s.version === 1) { s.settings = { ...PFM.DEFAULT_SETTINGS, ...s.settings }; s.recurring = s.recurring || []; s.ts = s.ts || {}; s.deleted = s.deleted || {}; return s; }
+  } catch (e) { /* stockage indisponible */ }
+  return PFM.emptyState();
+}
+let snap = PFM.snapshot(state);
+function save(opts) {
+  snap = PFM.stamp(state, snap, Date.now()); // horodate les changements pour la fusion entre appareils
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  catch (e) { toast("⚠ Impossible d'enregistrer dans ce navigateur : télécharge une sauvegarde."); }
+  if (!(opts && opts.noSync)) Sync.schedule();
+}
+function toast(msg, ms = 3500) {
+  const t = $("toast"); t.textContent = msg; t.style.display = "block";
+  clearTimeout(toast._t); toast._t = setTimeout(() => (t.style.display = "none"), ms);
+}
+
+// ---------- import ----------
+function importJson(text, fallbackBank) {
+  try {
+    const r = PFM.readImport(text, fallbackBank);
+    if (r.backup) return restore(r.backup);
+    const res = PFM.merge(state, r.bank, r.transactions);
+    save();
+    if (!ui.period) ui.period = null;
+    render();
+    toast(`${PFM.BANKS[r.bank]} : ${Math.max(0, res.added - res.replacedPending)} nouvelles opérations, ${res.duplicates} déjà présentes` + (res.replacedPending ? `, ${res.replacedPending} « en cours » mises à jour` : "") + ".");
+    return true;
+  } catch (e) {
+    toast("❌ " + e.message, 6000);
+    return false;
+  }
+}
+function restore(b) {
+  const prev = state;
+  state = { ...PFM.emptyState(), ...b, recurring: b.recurring || [], version: 1, settings: { ...PFM.DEFAULT_SETTINGS, ...(b.settings || {}) }, ts: prev.ts || {}, deleted: prev.deleted || {} };
+  delete state.format;
+  save(); render(); renderSettings();
+  toast(`Sauvegarde restaurée : ${state.transactions.length} opérations.`);
+  return true;
+}
+async function importFiles(files) {
+  for (const f of files) importJson(await f.text(), $("pasteBank").value);
+  $("importDlg").close();
+}
+function bindDrop(el) {
+  el.addEventListener("click", () => $("fileInput").click());
+  el.addEventListener("dragover", (e) => { e.preventDefault(); el.classList.add("over"); });
+  el.addEventListener("dragleave", () => el.classList.remove("over"));
+  el.addEventListener("drop", (e) => { e.preventDefault(); el.classList.remove("over"); importFiles([...e.dataTransfer.files]); });
+}
+
+// ---------- calculs ----------
+function view() {
+  const all = PFM.enrich(state);
+  const scoped = ui.bank === "all" ? all : all.filter((t) => t.bank === ui.bank);
+  const periods = [...new Set(all.map((t) => t.period))].sort().reverse();
+  if (!ui.period || !periods.includes(ui.period)) ui.period = periods[0] || null;
+  return { all, scoped, periods };
+}
+
+// ---------- rendu ----------
+function render() {
+  const allTx = PFM.allTransactions(state);
+  const has = allTx.length > 0;
+  $("emptyView").hidden = has; $("mainView").hidden = !has;
+  renderBankSeg();
+  if (!has) { $("coverage").textContent = "Aucune donnée importée"; $("periodSel").innerHTML = ""; return; }
+  const v = view();
+  const sd = Number(state.settings.cycleStartDay) || 1;
+
+  // couverture des données
+  const banks = [...new Set(allTx.map((t) => t.bank))];
+  $("coverage").textContent = banks.map((b) => {
+    const bt = allTx.filter((t) => t.bank === b);
+    if (bt.every((t) => t.manual)) return `${PFM.BANKS[b]} : saisie manuelle`;
+    const ts = bt.filter((t) => !t.manual).map((t) => t.date).sort();
+    return `${PFM.BANKS[b]} : ${fmtDate(ts[0])} → ${fmtDate(ts[ts.length - 1])}`;
+  }).join(" · ") + (PFM.trackingCutoff(state.settings) ? ` · suivi depuis le ${fmtDate(PFM.trackingCutoff(state.settings))}` : "");
+
+  // sélecteur de période
+  $("periodSel").innerHTML = v.periods.map((p) => `<option value="${p}">${esc(PFM.periodLabel(p, sd, true))}</option>`).join("");
+  $("periodSel").value = ui.period;
+  const idx = v.periods.indexOf(ui.period);
+  $("prev").disabled = idx >= v.periods.length - 1; $("next").disabled = idx <= 0;
+
+  const cur = v.scoped.filter((t) => t.period === ui.period);
+  const s = PFM.summarize(cur);
+
+  // période partielle ?
+  const firstDate = v.scoped.filter((t) => !t.manual).map((t) => t.refDate).sort()[0];
+  const partial = firstDate && firstDate.slice(0, 7) === ui.period && Number(firstDate.slice(8, 10)) > sd + 2;
+  const onlySimple = banks.length === 1 && banks[0] === "simple";
+  const notes = [];
+  if (partial) notes.push(`<b>Période partielle</b> : les données commencent le ${fmtDate(firstDate)}.`);
+  if (onlySimple && s.transferIn > 0) notes.push(`<b>Seul Simple est importé.</b> Les ${mad0(s.transferIn)} reçus de tes autres comptes sont des transferts internes, donc exclus des revenus. L'épargne réelle sera juste une fois Dar Al Amane ajouté ; en attendant, regarde « Variation du solde ».`);
+  const cash = s.byCategory.find((c) => c.category === "Retraits espèces");
+  if (cash && s.expense > 0 && cash.total / s.expense > 0.2) notes.push(`<b>${Math.round((cash.total / s.expense) * 100)} % des dépenses sont des retraits d'espèces</b> : leur usage réel n'est pas visible.`);
+  $("banner").hidden = !notes.length; $("banner").innerHTML = notes.join("<br>");
+
+  // KPI
+  $("kIncome").textContent = mad0(s.income);
+  $("kIncomeN").textContent = `${cur.filter((t) => t.type === "income").length} opération(s)`;
+  $("kExpense").textContent = mad0(s.expense);
+  const prevP = v.periods[idx + 1];
+  if (prevP) {
+    const ps = PFM.summarize(v.scoped.filter((t) => t.period === prevP));
+    const d = s.expense - ps.expense;
+    $("kExpenseN").textContent = ps.expense ? `${d >= 0 ? "▲ +" : "▼ −"}${mad0(Math.abs(d))} vs ${PFM.periodLabel(prevP, sd)}` : "";
+  } else $("kExpenseN").textContent = "";
+  $("kSavings").textContent = (s.savings < 0 ? "−" : "") + mad0(Math.abs(s.savings));
+  $("kSavings").className = "value " + (s.savings >= 0 ? "pos" : "neg");
+  $("kSavingsN").textContent = s.savingsRate === null ? "Pas de revenu sur la période" : s.savingsRate < -1 ? "Dépenses bien supérieures aux revenus" : `Taux d'épargne : ${Math.round(s.savingsRate * 100)} %`;
+  const dAll = PFM.summarize(v.scoped);
+  if (dAll.daretOut || dAll.daretIn) {
+    const pos = dAll.daretOut - dAll.daretIn;
+    $("kSavingsN").textContent += (s.daretOut ? ` · dont ${mad0(s.daretOut)} versés à la Daret` : "") + (s.daretIn ? ` · ${mad0(s.daretIn)} reçus de la Daret` : "");
+    $("kSavingsN").title = `Daret, depuis le début : versé ${mad0(dAll.daretOut)}, reçu ${mad0(dAll.daretIn)} → ${pos >= 0 ? "à récupérer" : "avance à rembourser"} ${mad0(Math.abs(pos))}`;
+    const line = document.createElement("div");
+    line.textContent = `Daret depuis le début : ${pos >= 0 ? "à récupérer" : "reçue d'avance, reste à verser"} ${mad0(Math.abs(pos))}`;
+    $("kSavingsN").appendChild(line);
+  } else $("kSavingsN").title = "";
+  $("kNet").textContent = (s.net < 0 ? "−" : "+") + mad0(Math.abs(s.net));
+  $("kNet").className = "value " + (s.net >= 0 ? "pos" : "neg");
+  $("kNetN").textContent = `dont transferts internes : +${mad0(s.transferIn)} / −${mad0(s.transferOut)}`;
+
+  renderProjection(s, cur);
+  renderCategories(s, v);
+  renderMonthly(v);
+  renderTop(s);
+  renderTodo(v);
+  renderTable(v);
+}
+
+function renderProjection(s, cur) {
+  const sd = Number(state.settings.cycleStartDay) || 1;
+  const today = new Date().toISOString().slice(0, 10);
+  const curKey = PFM.periodKey(today, sd);
+  const box = $("proj");
+  if (ui.period !== curKey) { box.hidden = true; return; }
+  const { start, end } = PFM.periodBounds(curKey, sd);
+  let planned = PFM.enrich(state, PFM.plannedTransactions(state, end, today));
+  if (ui.bank !== "all") planned = planned.filter((t) => t.bank === ui.bank);
+  const p = PFM.summarize(planned);
+  // rythme des dépenses courantes (hors récurrentes) depuis le début de la période
+  const day = 86400000, d0 = Date.parse(start), dT = Date.parse(today), dE = Date.parse(end);
+  const elapsed = Math.max(1, Math.round((dT - d0) / day) + 1), remaining = Math.max(0, Math.round((dE - dT) / day));
+  const variable = cur.filter((t) => t.type === "expense" && !t.recurringId).reduce((a, t) => a - t.amount, 0);
+  const rhythm = (variable / elapsed) * remaining;
+  const incomeP = s.income + p.income, expenseP = s.expense + p.expense;
+  const savP = incomeP - expenseP, savR = savP - rhythm;
+  const rate = (x) => (incomeP > 0 ? ` · ${Math.round((x / incomeP) * 100)} %` : "");
+  const fmtS = (x) => `<span class="${x >= 0 ? "pos" : "neg"}">${x < 0 ? "−" : ""}${mad0(Math.abs(x))}</span>`;
+  const upcoming = planned.slice().sort((a, b) => (a.date < b.date ? -1 : 1));
+  box.hidden = false;
+  box.innerHTML = `
+    <div class="cardhead"><h2>Projection au ${fmtDate(end)} <span class="sub">· ${remaining} jour${remaining > 1 ? "s" : ""} restant${remaining > 1 ? "s" : ""}</span></h2></div>
+    <div class="cols">
+      <div>
+        <div class="lbl">Épargne fin de période, avec les opérations prévues</div>
+        <div class="big">${fmtS(savP)}<span class="sub" style="font-size:13px;font-weight:400">${rate(savP)}</span></div>
+        <div class="lbl" style="margin-top:10px">… et si tu gardes ton rythme actuel (${mad0(variable / elapsed)}/jour hors récurrent)</div>
+        <div class="big">${fmtS(savR)}<span class="sub" style="font-size:13px;font-weight:400">${rate(savR)}</span></div>
+      </div>
+      <div class="up">
+        <div class="lbl" style="border:0">À venir sur la période</div>
+        ${upcoming.length ? upcoming.map((t) => `<div><span>${fmtDate(t.date)} · ${esc(t.label)}</span><span>${signed(t.amount)}</span></div>`).join("") : `<div><span class="dim">Aucune opération récurrente prévue</span><span></span></div>`}
+        ${p.daretOut ? `<div class="dim"><span>dont Daret (épargne, hors dépenses)</span><span>−${mad0(p.daretOut)}</span></div>` : ""}
+      </div>
+      <div class="up">
+        <div class="lbl" style="border:0">Calcul</div>
+        <div><span>Revenus reçus + prévus</span><span>${mad0(s.income)} + ${mad0(p.income)}</span></div>
+        <div><span>Dépenses faites + prévues</span><span>${mad0(s.expense)} + ${mad0(p.expense)}</span></div>
+        <div><span>Dépenses courantes estimées (${remaining} j)</span><span>${mad0(rhythm)}</span></div>
+      </div>
+    </div>`;
+}
+
+function renderBankSeg() {
+  const present = new Set(PFM.allTransactions(state).map((t) => t.bank));
+  const opts = [["all", "Tous"], ...Object.entries(PFM.BANKS).filter(([k]) => present.has(k))];
+  $("bankSeg").innerHTML = opts.map(([k, n]) => `<button data-bank="${k}" class="${ui.bank === k ? "on" : ""}">${esc(n)}</button>`).join("");
+  $("bankSeg").hidden = present.size < 2;
+}
+
+function globalRank(v) {
+  // rang de chaque catégorie sur tout l'historique affiché → une couleur qui reste la même d'un mois à l'autre
+  const tot = {};
+  v.scoped.forEach((t) => { if (t.type === "expense") tot[t.category] = (tot[t.category] || 0) - t.amount; });
+  return Object.entries(tot).sort((a, b) => b[1] - a[1]).map(([c]) => c);
+}
+
+function renderCategories(s, v) {
+  $("catSub").textContent = s.expense ? `· ${s.byCategory.length} catégories` : "";
+  $("catViewSeg").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === catView()));
+  if (!s.byCategory.length) { $("catBars").innerHTML = `<div class="dim">Aucune dépense sur cette période.</div>`; return; }
+  if (catView() === "donut") return renderDonut(s, v);
+  const max = Math.max(1, ...s.byCategory.map((c) => c.total));
+  $("catBars").innerHTML = s.byCategory.map((c) => `
+    <div class="hbar" data-cat="${esc(c.category)}" title="Voir le détail : ${esc(c.category)}">
+      <div class="name">${esc(c.category)}</div>
+      <div class="track"><div class="fill" style="width:${Math.max(0, (c.total / max) * 100).toFixed(1)}%"></div></div>
+      <div class="val">${mad0(c.total)}<small>${s.expense ? Math.round((c.total / s.expense) * 100) : 0} %</small></div>
+    </div>`).join("");
+}
+
+function renderDonut(s, v) {
+  const rank = globalRank(v), colors = {}, used = new Set();
+  const pos = s.byCategory.filter((c) => c.total > 0);
+  const parts = pos.slice(0, 5), others = pos.slice(5);
+  parts.forEach((c) => { const r = rank.indexOf(c.category); if (r >= 0 && r < 8 && !used.has(r)) { colors[c.category] = r; used.add(r); } });
+  parts.forEach((c) => { if (colors[c.category] === undefined) { let i = 0; while (used.has(i)) i++; colors[c.category] = i; used.add(i); } });
+  Object.keys(colors).forEach((k) => (colors[k] = `var(--c${colors[k] + 1})`));
+  const otherTotal = others.reduce((a, c) => a + c.total, 0);
+  if (otherTotal > 0) parts.push({ category: "Autres", total: otherTotal, other: true, members: others });
+  const sum = parts.reduce((a, c) => a + c.total, 0) || 1;
+  const R0 = 104, R1 = 64, C = 110;
+  let a0 = -Math.PI / 2, paths = "";
+  const pt = (r, a) => `${(C + r * Math.cos(a)).toFixed(2)},${(C + r * Math.sin(a)).toFixed(2)}`;
+  parts.forEach((p) => {
+    const frac = p.total / sum, a1 = a0 + frac * Math.PI * 2;
+    const col = p.other ? "var(--c-other)" : colors[p.category];
+    if (frac >= 0.9999) {
+      paths += `<path data-cat="${esc(p.category)}" fill="${col}" fill-rule="evenodd" d="M${C - R0},${C} a${R0},${R0} 0 1,0 ${2 * R0},0 a${R0},${R0} 0 1,0 ${-2 * R0},0 M${C - R1},${C} a${R1},${R1} 0 1,0 ${2 * R1},0 a${R1},${R1} 0 1,0 ${-2 * R1},0"/>`;
+    } else {
+      const large = a1 - a0 > Math.PI ? 1 : 0;
+      paths += `<path ${p.other ? 'data-other="1"' : `data-cat="${esc(p.category)}"`} fill="${col}" d="M${pt(R0, a0)} A${R0},${R0} 0 ${large},1 ${pt(R0, a1)} L${pt(R1, a1)} A${R1},${R1} 0 ${large},0 ${pt(R1, a0)} Z"/>`;
+    }
+    a0 = a1;
+  });
+  const legend = parts.map((p) => `
+    <div class="r ${p.other ? "other" : ""}" ${p.other ? "" : `data-cat="${esc(p.category)}" title="Voir le détail"`}>
+      <i style="background:${p.other ? "var(--c-other)" : colors[p.category]}"></i><span>${esc(p.category)}</span>
+      <span class="a">${mad0(p.total)}</span><span class="p">${Math.round((p.total / sum) * 100)} %</span>
+      ${p.other ? `<span class="sub2">${p.members.map((m) => esc(m.category)).join(", ")}</span>` : ""}
+    </div>`).join("");
+  $("catBars").innerHTML = `<div class="donut">
+    <svg viewBox="0 0 220 220" role="img" aria-label="Répartition des dépenses par catégorie">${paths}
+      <text class="ctr1" x="110" y="104" text-anchor="middle">Dépenses</text>
+      <text class="ctr2" x="110" y="126" text-anchor="middle">${mad0(s.expense)}</text></svg>
+    <div class="dleg">${legend}</div></div>`;
+  $("catBars")._parts = parts;
+}
+
+function lastKeys(v, n = 12) {
+  let [y, m] = v.periods[0].split("-").map(Number);
+  const keys = [];
+  for (let i = 0; i < n; i++) { keys.unshift(`${y}-${String(m).padStart(2, "0")}`); m--; if (!m) { m = 12; y--; } }
+  const firstKey = v.periods[v.periods.length - 1];
+  return keys.filter((k) => k >= firstKey);
+}
+
+function openCat(cat) {
+  const v = view(), sd = Number(state.settings.cycleStartDay) || 1;
+  const sign = PFM.CAT_TYPE[cat] === "income" ? 1 : -1;
+  const inCat = v.scoped.filter((t) => t.category === cat);
+  const tot = (k) => inCat.filter((t) => t.period === k).reduce((a, t) => a + sign * t.amount, 0);
+  const cur = inCat.filter((t) => t.period === ui.period).sort((a, b) => (a.refDate < b.refDate ? 1 : -1));
+  const total = tot(ui.period);
+  const all = PFM.summarize(v.scoped.filter((t) => t.period === ui.period));
+  const base = sign < 0 ? all.expense : all.income;
+  const idx = v.periods.indexOf(ui.period);
+  const prevKeys = v.periods.slice(idx + 1, idx + 7);
+  const prev = prevKeys.length ? tot(prevKeys[0]) : null;
+  const avg = prevKeys.length ? prevKeys.reduce((a, k) => a + tot(k), 0) / prevKeys.length : null;
+  // marchands de la catégorie sur la période
+  const mer = {};
+  cur.forEach((t) => { const m = (mer[t.merchant] = mer[t.merchant] || { n: 0, s: 0 }); m.n++; m.s += sign * t.amount; });
+  const merList = Object.entries(mer).sort((a, b) => b[1].s - a[1].s);
+  // mini graphique 12 mois
+  const keys = lastKeys(v), vals = keys.map(tot), max = Math.max(1, ...vals);
+  const W = 680, H = 120, bot = H - 20, band = W / keys.length, bw = Math.min(24, band - 12);
+  const cols = keys.map((k, i) => {
+    const h = (Math.max(0, vals[i]) / max) * (bot - 18), x = band * i + (band - bw) / 2, r = Math.min(4, h);
+    const col = k === ui.period ? "var(--s1)" : "color-mix(in srgb, var(--s1) 45%, var(--surface))";
+    return (h > 0.5 ? `<path d="M${x},${bot} V${bot - h + r} Q${x},${bot - h} ${x + r},${bot - h} H${x + bw - r} Q${x + bw},${bot - h} ${x + bw},${bot - h + r} V${bot} Z" fill="${col}"><title>${esc(PFM.periodLabel(k, sd, true))} : ${mad0(vals[i])}</title></path>` : "")
+      + (k === ui.period && h > 0.5 ? `<text class="axis" x="${x + bw / 2}" y="${bot - h - 5}" text-anchor="middle">${nf0.format(vals[i])}</text>` : "")
+      + `<text class="axis" x="${x + bw / 2}" y="${H - 4}" text-anchor="middle">${esc(PFM.periodLabel(k, sd))}</text>`;
+  }).join("");
+  const delta = prev === null ? "—" : `${total - prev >= 0 ? "▲ +" : "▼ −"}${mad0(Math.abs(total - prev))}`;
+  $("catDetail").innerHTML = `
+    <button class="btn close" type="button" data-close>Fermer</button>
+    <h2>${esc(cat)}</h2>
+    <div class="sub">${esc(PFM.periodLabel(ui.period, sd, true))}${ui.bank !== "all" ? " · " + esc(PFM.BANKS[ui.bank]) : ""}</div>
+    <div class="det-kpis">
+      <div><b>${mad0(total)}</b><span>sur la période</span></div>
+      <div><b>${base > 0 ? Math.round((total / base) * 100) + " %" : "—"}</b><span>des ${sign < 0 ? "dépenses" : "revenus"}</span></div>
+      <div><b>${delta}</b><span>vs ${prevKeys[0] ? esc(PFM.periodLabel(prevKeys[0], sd)) : "période précédente"}</span></div>
+      <div><b>${avg === null ? "—" : mad0(avg)}</b><span>moyenne ${prevKeys.length} mois précédents</span></div>
+    </div>
+    <div class="chart"><svg viewBox="0 0 ${W} ${H}" style="height:auto">${cols}</svg></div>
+    <h3>Par marchand</h3>
+    <div class="list">${merList.map(([m, x]) => `<div class="li"><div><div class="m">${esc(m)}</div><div class="c">${x.n} opération${x.n > 1 ? "s" : ""}</div></div><div class="amt">${mad(x.s)}</div></div>`).join("") || `<div class="dim">Aucune opération.</div>`}</div>
+    <h3>Opérations (${cur.length})</h3>
+    <div class="ops"><table><tbody>${cur.map((t) => `<tr><td class="dim">${fmtDate(t.refDate)}</td><td>${esc(t.merchant)}${t.pending ? `<span class="pill pending">en cours</span>` : ""}<div class="raw">${esc(t.label)}</div></td>
+      <td><select data-tx="${t.id}" data-key="${esc(t.merchantKey)}" aria-label="Catégorie">${catOptions(t.category)}</select></td><td class="amt">${signed(t.amount)}</td></tr>`).join("")}</tbody></table></div>
+    <div class="actions"><button class="btn" type="button" data-intable="${esc(cat)}">Voir dans le tableau</button><button class="btn primary" type="button" data-close>Fermer</button></div>`;
+  $("catDlg")._cat = cat;
+  if (!$("catDlg").open) $("catDlg").showModal();
+}
+
+function renderMonthly(v) {
+  const sd = Number(state.settings.cycleStartDay) || 1;
+  // 12 périodes consécutives se terminant à la plus récente
+  const data = lastKeys(v).map((k) => ({ k, ...PFM.summarize(v.scoped.filter((t) => t.period === k)) }));
+  const el = $("monthChart");
+  const W = Math.max(300, el.clientWidth || 560), H = 240, P = { l: 52, r: 8, t: 10, b: 26 };
+  const max = Math.max(1, ...data.map((d) => Math.max(d.income, d.expense)));
+  const step = niceStep(max / 4), top = Math.ceil(max / step) * step;
+  const y0 = H - P.b, sy = (val) => y0 - (val / top) * (H - P.t - P.b);
+  const n = data.length, band = (W - P.l - P.r) / Math.max(n, 1), bw = Math.min(18, (band - 10) / 2);
+  let g = "";
+  for (let v2 = 0; v2 <= top + 1e-9; v2 += step) g += `<line class="grid" x1="${P.l}" x2="${W - P.r}" y1="${sy(v2)}" y2="${sy(v2)}"/><text class="axis" x="${P.l - 6}" y="${sy(v2) + 4}" text-anchor="end">${nf0.format(v2 / 1000)}k</text>`;
+  let bars = "", hits = "";
+  data.forEach((d, i) => {
+    const cx = P.l + band * i + band / 2;
+    const bar = (val, x, color) => {
+      const h = Math.max(0, y0 - sy(val)); if (h < 0.5) return "";
+      const r = Math.min(4, h);
+      return `<path d="M${x},${y0} V${y0 - h + r} Q${x},${y0 - h} ${x + r},${y0 - h} H${x + bw - r} Q${x + bw},${y0 - h} ${x + bw},${y0 - h + r} V${y0} Z" fill="${color}"/>`;
+    };
+    hits += `<rect class="hit ${d.k === ui.period ? "cur" : ""}" data-i="${i}" data-k="${d.k}" x="${cx - band / 2 + 2}" y="${P.t}" width="${band - 4}" height="${H - P.t - P.b}" rx="6"/>`;
+    bars += bar(d.income, cx - bw - 1, "var(--s1)") + bar(d.expense, cx + 1, "var(--s2)");
+    bars += `<text class="axis" x="${cx}" y="${H - 8}" text-anchor="middle">${esc(PFM.periodLabel(d.k, sd).replace(" ", " "))}</text>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Revenus et dépenses par mois">${g}${hits}<g pointer-events="none">${bars}</g></svg>`;
+  el._data = data;
+}
+function niceStep(x) { const p = Math.pow(10, Math.floor(Math.log10(x || 1))); const f = x / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+
+function renderTop(s) {
+  $("topList").innerHTML = s.topMerchants.slice(0, 8).map((m) => `
+    <div class="li"><div><div class="m">${esc(m.merchant)}</div><div class="c">${esc(m.category)} · ${m.count} opération${m.count > 1 ? "s" : ""}</div></div>
+    <div class="amt">${mad(m.total)}</div></div>`).join("") || `<div class="dim">Rien sur cette période.</div>`;
+}
+
+function catOptions(selected) {
+  const groups = { income: "Revenus", expense: "Dépenses", transfer: "Épargne & transferts" };
+  return Object.entries(groups).map(([type, label]) => `<optgroup label="${label}">` +
+    PFM.CATEGORIES.filter((c) => c.type === type).map((c) => `<option ${c.name === selected ? "selected" : ""}>${esc(c.name)}</option>`).join("") + `</optgroup>`).join("");
+}
+
+function renderTodo(v) {
+  const agg = {};
+  v.scoped.filter((t) => t.category === "Non catégorisé" || (t.category === "Autres revenus" && t.catSource === "auto")).forEach((t) => {
+    const a = (agg[t.merchantKey] = agg[t.merchantKey] || { key: t.merchantKey, merchant: t.merchant, count: 0, total: 0, cat: t.category });
+    a.count++; a.total += t.amount;
+  });
+  const items = Object.values(agg).sort((a, b) => Math.abs(b.total) - Math.abs(a.total));
+  $("todoList").innerHTML = items.length ? items.slice(0, 8).map((a) => `
+    <div class="li"><div><div class="m">${esc(a.merchant)}</div><div class="c">${a.count} opération${a.count > 1 ? "s" : ""} · toutes périodes</div></div>
+    <div class="amt">${signed(a.total)}</div>
+    <select data-rule="${esc(a.key)}" aria-label="Catégorie pour ${esc(a.merchant)}">${catOptions(a.cat)}</select></div>`).join("")
+    + (items.length > 8 ? `<div class="c dim" style="padding-top:8px">+ ${items.length - 8} autres marchands</div>` : "")
+    : `<div class="dim">✓ Tout est catégorisé.</div>`;
+}
+
+function renderTable(v) {
+  const sel = $("catFilter");
+  if (sel.options.length <= 1) sel.innerHTML = `<option value="">Toutes les catégories</option>` + catOptions(null);
+  sel.value = ui.cat;
+  const q = PFM.norm(ui.q);
+  const sdT = Number(state.settings.cycleStartDay) || 1, todayT = new Date().toISOString().slice(0, 10);
+  let plannedRows = [];
+  if (!ui.all && ui.period === PFM.periodKey(todayT, sdT)) {
+    plannedRows = PFM.enrich(state, PFM.plannedTransactions(state, PFM.periodBounds(ui.period, sdT).end, todayT));
+    if (ui.bank !== "all") plannedRows = plannedRows.filter((t) => t.bank === ui.bank);
+  }
+  let rows = [...plannedRows, ...v.scoped].filter((t) => (ui.all || t.period === ui.period) && (!ui.cat || t.category === ui.cat) && (!q || PFM.norm(t.label + " " + t.merchant).includes(q)));
+  rows.sort((a, b) => (a.refDate < b.refDate ? 1 : a.refDate > b.refDate ? -1 : 0));
+  const total = rows.filter((t) => !t.planned).reduce((a, t) => a + t.amount, 0);
+  const shown = rows.slice(0, ui.limit);
+  $("txBody").innerHTML = shown.map((t) => `
+    <tr class="${t.planned ? "planned" : ""}">
+      <td class="dim">${fmtDate(t.refDate)}</td>
+      <td><div>${esc(t.merchant)}${t.pending ? `<span class="pill pending">en cours</span>` : ""}${t.planned ? `<span class="pill plan">prévu</span>` : ""}</div><div class="raw">${esc(t.label)}</div></td>
+      <td class="hide-sm dim">${esc(PFM.BANKS[t.bank])}</td>
+      <td><select data-tx="${t.id}" data-key="${esc(t.merchantKey)}" aria-label="Catégorie">${catOptions(t.category)}</select>${t.catSource !== "auto" ? `<span class="pill">${t.catSource}</span>` : ""}</td>
+      <td class="amt ${t.amount > 0 ? "pos" : ""}">${signed(t.amount)}${t.manual && !t.recurringId ? ` <button class="btn icon" style="padding:1px 6px" data-deltx="${t.id}" title="Supprimer cette saisie" aria-label="Supprimer">✕</button>` : ""}</td>
+    </tr>`).join("") || `<tr><td colspan="5" class="dim">Aucune opération.</td></tr>`;
+  $("more").innerHTML = `<span class="sub">${rows.length} opération${rows.length > 1 ? "s" : ""} · solde ${signed(total)}</span>` +
+    (rows.length > ui.limit ? ` <button class="btn" id="moreBtn">Afficher plus</button>` : "");
+}
+
+function renderSettings() {
+  $("owners").value = (state.settings.ownerNames || []).join(", ");
+  $("cycle").value = state.settings.cycleStartDay;
+  $("basis").value = state.settings.dateBasis;
+  $("trackStart").value = state.settings.trackingStart || "";
+  $("clientId").value = Sync.clientId();
+  Sync.status();
+  const co = PFM.trackingCutoff(state.settings);
+  $("trackHint").textContent = co ? `Suivi effectif à partir du ${fmtDate(co)} (début de la période budgétaire qui contient cette date). Les opérations antérieures restent stockées mais sont ignorées.` : "Tout l'historique est pris en compte.";
+  const cm = new Date().toISOString().slice(0, 7);
+  $("recList").innerHTML = state.recurring.length ? state.recurring.map((x) => `<div><span><b>${esc(x.label)}</b> · ${signed(x.amount)} · le ${x.day} · ${esc(PFM.BANKS[x.bank])} · ${esc(x.category)}${x.end ? ` · arrêtée après ${esc(PFM.periodLabel(x.end, 1))}` : ""}</span>
+    <span class="row">${x.end ? "" : `<button class="btn" type="button" data-stoprec="${x.id}" title="Plus d'occurrence à partir du mois prochain">Arrêter</button>`}<button class="btn danger" type="button" data-delrec="${x.id}" title="Supprime aussi les occurrences passées">Supprimer</button></span></div>`).join("")
+    : `<div class="dim">Aucune. Ajoute-en avec « ＋ Opération » en cochant « Répéter chaque mois ».</div>`;
+  const r = Object.entries(state.rules);
+  $("rulesList").innerHTML = r.length ? r.map(([k, c]) => `<div><span>${esc(k)} → <b>${esc(c)}</b></span><button class="btn" type="button" data-delrule="${esc(k)}">Supprimer</button></div>`).join("")
+    : `<div class="dim">Aucune règle apprise pour l'instant.</div>`;
+}
+
+// ---------- événements ----------
+$("importBtn").onclick = () => $("importDlg").showModal();
+let addSens = -1;
+$("aBank").innerHTML = Object.entries(PFM.BANKS).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join("");
+$("addBtn").onclick = () => {
+  $("addForm").reset(); addSens = -1;
+  $("aSens").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.s === "-1"));
+  $("aBank").value = "daralamane"; $("aDate").value = new Date().toISOString().slice(0, 10);
+  $("aCat").innerHTML = catOptions("Logement");
+  $("addDlg").showModal(); $("aAmount").focus();
+};
+$("aSens").onclick = (e) => { const b = e.target.closest("[data-s]"); if (!b) return; addSens = Number(b.dataset.s); $("aSens").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); };
+$("addDlg").addEventListener("click", (e) => { if (e.target === $("addDlg") || e.target.dataset.closeAdd !== undefined) $("addDlg").close(); });
+$("addForm").onsubmit = (e) => {
+  e.preventDefault();
+  const amount = Math.round(Number($("aAmount").value) * 100) / 100 * addSens;
+  const date = $("aDate").value, label = $("aLabel").value.trim(), category = $("aCat").value, bank = $("aBank").value;
+  if (!amount || !date || !label) return;
+  const rid = PFM.hash(label + date + Math.random());
+  if ($("aRec").checked) {
+    state.recurring.push({ id: rid, bank, day: Number(date.slice(8, 10)), label, amount, category, start: date.slice(0, 7), end: null });
+  } else {
+    state.transactions.push({ id: "m" + rid, bank, date, valueDate: date, txDate: date, label, merchant: label, merchantKey: PFM.norm(label), amount, pending: false, manual: true, fixedCategory: category });
+  }
+  save(); $("addDlg").close(); ui.period = null; render();
+  toast($("aRec").checked ? `Opération récurrente ajoutée : ${label}, chaque mois le ${Number(date.slice(8, 10))}.` : `Opération ajoutée : ${label}.`);
+};
+$("txBody").addEventListener("click", (e) => {
+  const id = e.target.dataset.deltx; if (!id) return;
+  state.transactions = state.transactions.filter((t) => t.id !== id); delete state.overrides[id];
+  save(); render(); toast("Saisie supprimée.");
+});
+$("recList").onclick = (e) => {
+  const stop = e.target.dataset.stoprec, del = e.target.dataset.delrec;
+  if (stop) { const r = state.recurring.find((x) => x.id === stop); r.end = new Date().toISOString().slice(0, 7); }
+  if (del) state.recurring = state.recurring.filter((x) => x.id !== del);
+  if (stop || del) { save(); render(); renderSettings(); }
+};
+$("settingsBtn").onclick = () => { renderSettings(); $("resetConfirm").hidden = true; $("settingsDlg").showModal(); };
+$("fileInput").onchange = (e) => { importFiles([...e.target.files]); e.target.value = ""; };
+bindDrop($("dlgDrop")); bindDrop($("emptyDrop"));
+$("pasteBank").innerHTML = Object.entries(PFM.BANKS).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join("");
+$("pasteGo").onclick = () => { const t = $("paste").value.trim(); if (!t) return; if (importJson(t, $("pasteBank").value)) { $("paste").value = ""; $("importDlg").close(); } };
+
+$("bankSeg").onclick = (e) => { const b = e.target.closest("[data-bank]"); if (b) { ui.bank = b.dataset.bank; render(); } };
+$("periodSel").onchange = (e) => { ui.period = e.target.value; ui.limit = 60; render(); };
+$("prev").onclick = () => { const p = view().periods; ui.period = p[p.indexOf(ui.period) + 1] || ui.period; render(); };
+$("next").onclick = () => { const p = view().periods; ui.period = p[p.indexOf(ui.period) - 1] || ui.period; render(); };
+$("catBars").onclick = (e) => { const r = e.target.closest("[data-cat]"); if (r) openCat(r.dataset.cat); };
+$("catViewSeg").onclick = (e) => { const b = e.target.closest("[data-v]"); if (b) { state.settings.catView = b.dataset.v; save(); render(); } };
+$("catBars").addEventListener("mousemove", (e) => {
+  const p = e.target.closest("path"); const tip = $("tip");
+  if (!p || !$("catBars")._parts) { tip.style.display = "none"; return; }
+  const part = $("catBars")._parts.find((x) => (p.dataset.other ? x.other : x.category === p.dataset.cat));
+  if (!part) return;
+  const sum = $("catBars")._parts.reduce((a, c) => a + c.total, 0);
+  tip.innerHTML = `<b>${esc(part.category)}</b> · ${mad0(part.total)} (${Math.round((part.total / sum) * 100)} %)` + (part.other ? `<br>${part.members.map((m) => `${esc(m.category)} ${mad0(m.total)}`).join("<br>")}` : "<br>Clique pour le détail");
+  tip.style.left = `${e.pageX}px`; tip.style.top = `${e.pageY - 12}px`; tip.style.display = "block";
+});
+$("catBars").addEventListener("mouseleave", () => ($("tip").style.display = "none"));
+$("catDlg").addEventListener("click", (e) => {
+  if (e.target === $("catDlg") || e.target.dataset.close !== undefined) $("catDlg").close();
+  const c = e.target.dataset.intable;
+  if (c) { ui.cat = c; $("catDlg").close(); render(); document.querySelector("#txBody").scrollIntoView({ behavior: "smooth", block: "start" }); }
+});
+$("catFilter").onchange = (e) => { ui.cat = e.target.value; render(); };
+$("q").oninput = (e) => { ui.q = e.target.value; renderTable(view()); };
+$("allPeriods").onchange = (e) => { ui.all = e.target.checked; render(); };
+$("more").onclick = (e) => { if (e.target.id === "moreBtn") { ui.limit += 100; renderTable(view()); } };
+
+document.addEventListener("change", (e) => {
+  const s = e.target;
+  if (s.dataset.rule !== undefined) { setRule(s.dataset.rule, s.value); }
+  else if (s.dataset.tx) {
+    if ($("learn").checked) { setRule(s.dataset.key, s.value); delete state.overrides[s.dataset.tx]; }
+    else { state.overrides[s.dataset.tx] = s.value; save(); render(); refreshDetail(); }
+  }
+});
+function refreshDetail() { if ($("catDlg").open) openCat($("catDlg")._cat); }
+function setRule(key, cat) {
+  state.rules[key] = cat;
+  // une règle de marchand l'emporte sur les choix manuels précédents pour ce marchand
+  const ids = new Set(state.transactions.filter((t) => t.merchantKey === key).map((t) => t.id));
+  for (const id of Object.keys(state.overrides)) if (ids.has(id)) delete state.overrides[id];
+  save(); render(); refreshDetail();
+  toast(`Règle enregistrée : ${key} → ${cat} (${ids.size} opération${ids.size > 1 ? "s" : ""})`);
+}
+
+// tooltip du graphique mensuel
+$("monthChart").addEventListener("mousemove", (e) => {
+  const r = e.target.closest(".hit"); const tip = $("tip");
+  if (!r) { tip.style.display = "none"; return; }
+  const d = $("monthChart")._data[Number(r.dataset.i)];
+  const sd = Number(state.settings.cycleStartDay) || 1;
+  tip.innerHTML = `<b>${esc(PFM.periodLabel(d.k, sd, true))}</b><br><i style="background:var(--s1)"></i>Revenus ${mad0(d.income)}<br><i style="background:var(--s2)"></i>Dépenses ${mad0(d.expense)}<br>Épargne ${d.savings < 0 ? "−" : ""}${mad0(Math.abs(d.savings))}`;
+  const box = r.getBoundingClientRect();
+  tip.style.left = `${box.left + box.width / 2 + window.scrollX}px`;
+  tip.style.top = `${box.top + window.scrollY - 6}px`;
+  tip.style.display = "block";
+});
+$("monthChart").addEventListener("mouseleave", () => ($("tip").style.display = "none"));
+$("monthChart").addEventListener("click", (e) => { const r = e.target.closest(".hit"); if (r && view().periods.includes(r.dataset.k)) { ui.period = r.dataset.k; render(); } });
+
+// réglages
+$("owners").onchange = (e) => { state.settings.ownerNames = e.target.value.split(",").map((s) => s.trim()).filter(Boolean); save(); render(); };
+$("cycle").onchange = (e) => { state.settings.cycleStartDay = Math.min(28, Math.max(1, Number(e.target.value) || 1)); ui.period = null; save(); render(); };
+$("trackStart").onchange = (e) => { state.settings.trackingStart = e.target.value; ui.period = null; save(); render(); renderSettings(); };
+$("trackAll").onclick = () => { state.settings.trackingStart = ""; ui.period = null; save(); render(); renderSettings(); };
+$("cycle").addEventListener("change", () => renderSettings());
+$("basis").onchange = (e) => { state.settings.dateBasis = e.target.value; ui.period = null; save(); render(); };
+$("rulesList").onclick = (e) => { const k = e.target.dataset.delrule; if (k) { delete state.rules[k]; save(); render(); renderSettings(); } };
+$("backupBtn").onclick = () => {
+  const blob = new Blob([JSON.stringify({ format: "pfm-backup", ...state })], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = `pfm-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$("restoreBtn").onclick = () => { $("settingsDlg").close(); $("importDlg").showModal(); toast("Dépose ton fichier de sauvegarde."); };
+$("resetBtn").onclick = () => ($("resetConfirm").hidden = false);
+$("resetYes").onclick = () => { state = { ...PFM.emptyState(), ts: state.ts, deleted: state.deleted }; save(); ui.period = null; $("settingsDlg").close(); render(); toast("Données effacées."); };
+
+// ---------- synchronisation Google Drive (dossier caché de l'appli), chiffrée de bout en bout ----------
+const Sync = (() => {
+  const CID_KEY = "pfm.clientId", FILE = "pfm-vault.json", SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+  const API = "https://www.googleapis.com/drive/v3", UP = "https://www.googleapis.com/upload/drive/v3";
+  let token = null, tokenExp = 0, tokenClient = null, key = null, salt = null, busy = false, timer = null, lastSync = null, lastErr = "";
+
+  const clientId = () => { try { return localStorage.getItem(CID_KEY) || ""; } catch { return ""; } };
+  const setClientId = (v) => { try { localStorage.setItem(CID_KEY, v.trim()); } catch {} tokenClient = null; };
+
+  // --- clé mémorisée (CryptoKey non exportable dans IndexedDB) ---
+  function idb() {
+    return new Promise((res, rej) => { const r = indexedDB.open("pfm-sync", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  }
+  async function idbGet(k) { try { const db = await idb(); return await new Promise((res) => { const q = db.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); } catch { return null; } }
+  async function idbSet(k, v) { try { const db = await idb(); await new Promise((res) => { const t = db.transaction("kv", "readwrite"); v === null ? t.objectStore("kv").delete(k) : t.objectStore("kv").put(v, k); t.oncomplete = res; t.onerror = res; }); } catch {} }
+
+  // --- authentification Google (Google Identity Services, jeton d'accès 1 h, jamais stocké) ---
+  function loadGis() {
+    if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+    return new Promise((res, rej) => {
+      const sc = document.createElement("script"); sc.src = "https://accounts.google.com/gsi/client"; sc.async = true;
+      sc.onload = res; sc.onerror = () => rej(new Error("Impossible de charger Google Identity Services."));
+      document.head.appendChild(sc);
+    });
+  }
+  async function getToken(interactive) {
+    if (token && Date.now() < tokenExp - 60000) return token;
+    if (!interactive) throw new Error("reconnect");
+    if (!clientId()) throw new Error("Renseigne d'abord le Client ID dans ⚙ Réglages.");
+    if (location.protocol === "file:") throw new Error("La synchro ne marche que sur la page hébergée (https), pas sur le fichier ouvert en local.");
+    await loadGis();
+    return new Promise((res, rej) => {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: clientId(), scope: SCOPE,
+        callback: (r) => { if (r.error) return rej(new Error("Connexion Google refusée : " + r.error)); token = r.access_token; tokenExp = Date.now() + r.expires_in * 1000; res(token); },
+        error_callback: (e) => rej(new Error(e && e.type === "popup_closed" ? "Fenêtre Google fermée." : "Connexion Google impossible (fenêtre bloquée ?).")),
+      });
+      tokenClient.requestAccessToken({ prompt: "" });
+    });
+  }
+  async function api(url, opts = {}) {
+    const r = await fetch(url, { ...opts, headers: { Authorization: "Bearer " + token, ...(opts.headers || {}) } });
+    if (r.status === 401) { token = null; throw new Error("reconnect"); }
+    if (!r.ok) throw new Error(`Google Drive : erreur ${r.status}`);
+    return r;
+  }
+  async function findFile() {
+    const q = encodeURIComponent(`name='${FILE}'`);
+    const r = await api(`${API}/files?spaces=appDataFolder&q=${q}&fields=files(id,modifiedTime)&orderBy=modifiedTime desc`);
+    return (await r.json()).files[0] || null;
+  }
+  async function upload(fileId, vault) {
+    const body = JSON.stringify(vault);
+    if (fileId) return api(`${UP}/files/${fileId}?uploadType=media`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body });
+    const boundary = "pfm" + Math.random().toString(36).slice(2);
+    const meta = JSON.stringify({ name: FILE, parents: ["appDataFolder"], mimeType: "application/json" });
+    const multi = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${boundary}--`;
+    return api(`${UP}/files?uploadType=multipart`, { method: "POST", headers: { "Content-Type": `multipart/related; boundary=${boundary}` }, body: multi });
+  }
+
+  // --- phrase secrète ---
+  function askPass(create) {
+    return new Promise((res) => {
+      $("passTitle").textContent = create ? "Crée ta phrase secrète" : "Phrase secrète";
+      $("passIntro").textContent = create
+        ? "Elle chiffre tes données avant l'envoi vers Google Drive. Choisis 4 mots ou plus, et note-la : si tu l'oublies, la copie en ligne est irrécupérable."
+        : "Saisis la phrase secrète choisie lors de la première synchronisation.";
+      $("pass2Field").hidden = !create; $("pass1").value = ""; $("pass2").value = ""; $("passErr").textContent = "";
+      const done = (v) => { $("passForm").onsubmit = null; $("passCancel").onclick = null; $("passDlg").close(); res(v); };
+      $("passCancel").onclick = () => done(null);
+      $("passForm").onsubmit = (e) => {
+        e.preventDefault();
+        const p1 = $("pass1").value;
+        if (create && p1.length < 12) { $("passErr").textContent = "Au moins 12 caractères (idéalement 4 mots)."; return; }
+        if (create && p1 !== $("pass2").value) { $("passErr").textContent = "Les deux saisies ne correspondent pas."; return; }
+        done({ pass: p1, remember: $("passRemember").checked });
+      };
+      $("passDlg").showModal(); $("pass1").focus();
+    });
+  }
+  async function ensureKey(vaultSalt) {
+    if (key && salt === vaultSalt) return true;
+    const mem = await idbGet("key");
+    if (mem && mem.salt === vaultSalt) { key = mem.key; salt = mem.salt; return true; }
+    const create = !vaultSalt;
+    const r = await askPass(create);
+    if (!r) return false;
+    const s2 = vaultSalt || PFM.newSalt();
+    key = await PFM.deriveKey(r.pass, s2); salt = s2;
+    if (r.remember) await idbSet("key", { key, salt }); else await idbSet("key", null);
+    return true;
+  }
+
+  // --- synchronisation : télécharger, fusionner, renvoyer ---
+  async function run(interactive) {
+    if (busy) return; busy = true; status("Synchronisation…");
+    try {
+      await getToken(interactive);
+      const f = await findFile();
+      if (f) {
+        const vault = await (await api(`${API}/files/${f.id}?alt=media`)).json();
+        if (!(await ensureKey(vault.salt))) { status("Synchronisation annulée."); return; }
+        let remote;
+        try { remote = await PFM.decryptVault(key, vault); }
+        catch (e) { key = null; salt = null; await idbSet("key", null); throw e; }
+        state = PFM.mergeStates(state, remote);
+        state.settings = { ...PFM.DEFAULT_SETTINGS, ...state.settings };
+        snap = PFM.snapshot(state);
+        save({ noSync: true });
+        await upload(f.id, await PFM.encryptVault(key, salt, state));
+      } else {
+        if (!(await ensureKey(null))) { status("Synchronisation annulée."); return; }
+        await upload(null, await PFM.encryptVault(key, salt, state));
+      }
+      lastSync = new Date(); lastErr = "";
+      ui.period = null; render();
+    } catch (e) {
+      lastErr = e.message === "reconnect" ? "Session Google expirée : clique sur ☁ pour te reconnecter." : e.message;
+      if (interactive || e.message !== "reconnect") toast("☁ " + lastErr, 6000);
+    } finally { busy = false; status(); }
+  }
+  function schedule() {
+    if (!token || Date.now() > tokenExp - 60000) { status(); return; }
+    clearTimeout(timer); timer = setTimeout(() => run(false), 2500);
+  }
+  function status(msg) {
+    const btn = $("syncBtn");
+    btn.hidden = !clientId();
+    const hh = lastSync ? lastSync.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "";
+    btn.textContent = msg ? "☁ …" : lastErr ? "☁ ⚠ Reconnecter" : lastSync && token ? `☁ ✓ ${hh}` : "☁ Synchroniser";
+    const st = $("syncStatus");
+    if (st) st.textContent = msg || (lastErr ? "⚠ " + lastErr : lastSync ? `Dernière synchronisation à ${hh}. Les changements suivants partent automatiquement tant que la session Google est ouverte (≈ 1 h).`
+      : clientId() ? "Prêt. Clique sur « Se connecter et synchroniser »." : "Colle le Client ID créé dans Google Cloud, puis connecte-toi.");
+  }
+  return { clientId, setClientId, run, schedule, status, forget: async () => { key = null; salt = null; await idbSet("key", null); toast("Phrase secrète oubliée sur cet appareil."); } };
+})();
+$("syncBtn").onclick = () => Sync.run(true);
+$("syncConnect").onclick = () => { Sync.setClientId($("clientId").value); $("settingsDlg").close(); Sync.run(true); };
+$("clientId").onchange = (e) => { Sync.setClientId(e.target.value); Sync.status(); };
+$("syncForget").onclick = () => Sync.forget();
+Sync.status();
+
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => state.transactions.length && renderMonthly(view()), 150); });
+render();
+})();
+</script>
+</body>
+</html>
