@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "PFM Connecteur – Simple (Attijarinet)",
+  "version": "0.1.0",
+  "description": "Exporte vos opérations Attijarinet en JSON pour votre PFM locale. Aucune donnée n'est envoyée ailleurs.",
+  "content_scripts": [
+    {
+      "matches": ["https://attijarinet.attijariwafa.com/particulier/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
