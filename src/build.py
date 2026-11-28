@@ -4,8 +4,12 @@ root = pathlib.Path(__file__).resolve().parent.parent
 src = root / "src"
 html = (src / "ui.html").read_text(encoding="utf-8")
 core = (src / "core.js").read_text(encoding="utf-8")
-bm = (src / "bookmarklet.js").read_text(encoding="utf-8")
-bm = re.sub(r"^/\*.*?\*/\s*", "", bm, flags=re.S)  # retire l'en-tête de commentaire
+# version minifiée (terser) si elle est à jour, sinon la source sans son en-tête
+full, mini = src / "bookmarklet.js", src / "bookmarklet.min.js"
+if mini.exists() and mini.stat().st_mtime >= full.stat().st_mtime:
+    bm = mini.read_text(encoding="utf-8").strip()
+else:
+    bm = re.sub(r"^/\*.*?\*/\s*", "", full.read_text(encoding="utf-8"), flags=re.S)
 href = "javascript:" + urllib.parse.quote(bm, safe="")
 assert "/*__CORE__*/" in html and '"__BOOKMARKLET_HREF__"' in html
 html = html.replace("/*__CORE__*/", core).replace('"__BOOKMARKLET_HREF__"', json.dumps(href))
