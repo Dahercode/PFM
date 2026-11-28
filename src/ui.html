@@ -381,6 +381,13 @@ dialog::backdrop { background: rgba(10,12,20,.45); backdrop-filter: blur(2px); }
             <input type="text" id="clientId" style="width:100%"><div class="hint">Déjà renseigné pour dahercode.github.io.</div></div>
         </div>
         <div class="card">
+          <h3>Récupérer les opérations Simple</h3>
+          <div class="field"><label>Favori « Export PFM »</label>
+            <div class="rowx"><a id="bmLink" class="btn primary" href="#" draggable="true" title="Fais-moi glisser dans ta barre de favoris" style="text-decoration:none;cursor:grab">⬇ Export PFM</a>
+              <button class="btn" id="bmCopy">Copier le code du favori</button></div>
+            <div class="hint">Sur ordinateur : <b>fais glisser le bouton bleu dans ta barre de favoris</b> (Ctrl+Maj+B pour l'afficher). Ensuite, sur la page <b>Opérations</b> de ton compte Simple dans Attijarinet, clique sur ce favori : tes opérations arrivent ici automatiquement.</div></div>
+        </div>
+        <div class="card">
           <h3>Objectif et budgets</h3>
           <div class="field"><label>Objectif d'épargne mensuel</label>
             <div class="rowx"><span class="dim">plancher</span><input type="number" id="goalMin" min="0" step="100" style="width:120px"><span class="dim">cible</span><input type="number" id="goalTarget" min="0" step="100" style="width:120px"><span class="dim">MAD</span></div>
@@ -516,12 +523,13 @@ document.addEventListener("click", (e) => {
 function importJson(text, fallbackBank) {
   try {
     const r = PFM.readImport(text, fallbackBank);
-    if (r.backup) return restore(r.backup);
+    if (r.backup) { restore(r.backup); return { ok: true, msg: "Sauvegarde restaurée." }; }
     const res = PFM.merge(state, r.bank, r.transactions);
     save(); render();
-    toast(`${PFM.BANKS[r.bank]} : ${Math.max(0, res.added - res.replacedPending)} nouvelles, ${res.duplicates} déjà présentes` + (res.replacedPending ? `, ${res.replacedPending} « en cours » mises à jour` : "") + ".");
-    return true;
-  } catch (e) { toast("❌ " + e.message, 6000); return false; }
+    const msg = `${PFM.BANKS[r.bank]} : ${Math.max(0, res.added - res.replacedPending)} nouvelles opérations, ${res.duplicates} déjà présentes` + (res.replacedPending ? `, ${res.replacedPending} « en cours » mises à jour` : "") + ".";
+    toast(msg);
+    return { ok: true, msg };
+  } catch (e) { toast("❌ " + e.message, 6000); return { ok: false, msg: e.message }; }
 }
 function restore(b) {
   const prev = state;
@@ -1135,6 +1143,33 @@ const Sync = (() => {
   return { clientId, setClientId, run, schedule, status, markDirty, forget: async () => { key = null; salt = null; await idbSet("key", null); toast("Phrase secrète oubliée sur cet appareil."); } };
 })();
 
+// ---------- favori Attijarinet : réception directe des opérations ----------
+const BOOKMARKLET_HREF = "__BOOKMARKLET_HREF__";
+const ATTI_ORIGIN = "https://attijarinet.attijariwafa.com";
+$("bmLink").href = BOOKMARKLET_HREF;
+$("bmLink").onclick = (e) => { e.preventDefault(); toast("Fais glisser ce bouton dans ta barre de favoris, puis utilise-le sur la page Opérations d'Attijarinet."); };
+$("bmCopy").onclick = async () => {
+  try { await navigator.clipboard.writeText(BOOKMARKLET_HREF); toast("Code copié : crée un favori et colle-le comme adresse (URL)."); }
+  catch { toast("Copie impossible : fais plutôt glisser le bouton dans tes favoris."); }
+};
+function lastSimpleDate() {
+  const d = state.transactions.filter((t) => t.bank === "simple" && !t.manual).map((t) => t.date).sort();
+  return d.length ? d[d.length - 1] : null;
+}
+window.addEventListener("message", (ev) => {
+  if (ev.origin !== ATTI_ORIGIN || !ev.data || ev.data.type !== "pfm-import") return;
+  const p = ev.data.payload;
+  if (!p || p.format !== "pfm-export" || p.bank !== "simple" || !Array.isArray(p.operations)) return;
+  const r = importJson(JSON.stringify(p), "simple");
+  location.hash = "#operations";
+  try { ev.source.postMessage({ type: "pfm-imported", ok: r.ok, msg: r.msg }, ATTI_ORIGIN); } catch {}
+});
+if (window.opener && /[?&]src=attijarinet/.test(location.search)) {
+  const hello = () => { try { window.opener.postMessage({ type: "pfm-ready", since: lastSimpleDate() }, ATTI_ORIGIN); } catch {} };
+  hello(); setTimeout(hello, 1500);
+  history.replaceState(null, "", location.pathname + location.hash);
+}
+
 // ---------- navigation ----------
 function route() {
   const h = (location.hash || "#accueil").slice(1);
@@ -1172,7 +1207,7 @@ $("addForm").onsubmit = (e) => {
 $("fileInput").onchange = (e) => { importFiles([...e.target.files]); e.target.value = ""; };
 bindDrop($("dlgDrop")); bindDrop($("emptyDrop"));
 $("pasteBank").innerHTML = Object.entries(PFM.BANKS).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join("");
-$("pasteGo").onclick = () => { const t = $("paste").value.trim(); if (t && importJson(t, $("pasteBank").value)) { $("paste").value = ""; $("importDlg").close(); } };
+$("pasteGo").onclick = () => { const t = $("paste").value.trim(); if (t && importJson(t, $("pasteBank").value).ok) { $("paste").value = ""; $("importDlg").close(); } };
 
 $("bankChips").onclick = (e) => { const b = e.target.closest("[data-bank]"); if (b) { ui.bank = b.dataset.bank; render(); } };
 $("periodSel").onchange = (e) => { ui.period = e.target.value; ui.limit = 80; render(); };
